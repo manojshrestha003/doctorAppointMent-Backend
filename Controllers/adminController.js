@@ -84,14 +84,15 @@ const loginAdmin  = async (req,res)=>{
 }
 
 //api to get all doctor list 
-const allDoctors =async (req, res) =>{
+const allDoctors = async (req, res) => {
     try {
-        const doctors  = await  doctorModel.find({}).select('-password')
-        res.json({success:true, doctors})
+      const doctors = await doctorModel.find({}).select('-password');
+      return res.status(200).json({ success: true, doctors });
     } catch (error) {
-        
+      console.error("Error fetching doctors:", error);
+      return res.status(500).json({ success: false, message: "Server error. Please try again later." });
     }
-
-}
+  };
+  
 
 export {addDoctor, loginAdmin, allDoctors}
