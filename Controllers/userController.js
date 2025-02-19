@@ -35,7 +35,7 @@ const registerUser = async (req, res)=>{
       const newUser = new userModel(userData)
       const  user = await newUser.save();
 
-      const token = jwt.sign({id:user._id}, process.env.JWT_SECRET)
+      const token=  jwt.sign({id:user._id}, process.env.JWT_SECRET)
 
       res.json({success:true, token})
     } catch (error) {
@@ -45,5 +45,31 @@ const registerUser = async (req, res)=>{
         
     }
 }
+const userLogin  = async(req, res) =>{
+  try {
+    const {email, password} = req.body;
+    const user = await userModel.findOne({email})
+    if(!user)
+    {
+      
+    return res.json({success:false, message: "User doesnot exist"})
+    }
+    const isMatch  = await bycrypt.compare(password, user.password)
+    if(isMatch){
+      const token  = jwt.sign({id:user._id,  }, process.env.JWT_SECRET)
+      res.json({success:true, token})
+    }
+    else{
+      res.json({success:false, message:"Invalid credentials"})
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.json({success:false, message: error.message})
+    
+  }
+}
 
-export {registerUser}
+
+
+export {registerUser,userLogin}
