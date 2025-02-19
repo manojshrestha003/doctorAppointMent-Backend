@@ -24,6 +24,7 @@ app.use('/api/doctor', doctorRouter)
 
 app.use('/api/user', userRouter)
 
+
 app.get('/', (req,res)=>{
     res.send("Api wroking great")
 })
