@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import {v2 as cloudinary} from 'cloudinary'
 import doctorModel from '../Models/doctorModel.js'
 import jwt from 'jsonwebtoken'
+import appointmentModel from '../Models/appointModel.js'
 //API for adding doctor 
 const addDoctor  = async (req, res)=>{
     try {
@@ -93,6 +94,54 @@ const allDoctors = async (req, res) => {
       return res.status(500).json({ success: false, message: "Server error. Please try again later." });
     }
   };
-  
 
-export {addDoctor, loginAdmin, allDoctors}
+  const appointmentAdmin = async (req, res) =>{
+    try {
+        const appointmemts =  await appointmentModel.find({})
+        res.json({
+            success:true,
+            appointmemts
+        })
+    } catch (error) {
+        
+    }
+
+  }
+  const appointmentCancel = async (req, res) => {
+    try {
+      const {  appointmentId } = req.body;
+      
+      // Find appointment
+      const appointmentData = await appointmentModel.findById(appointmentId);
+      if (!appointmentData) {
+        return res.status(404).json({ success: false, message: "Appointment not found" });
+      }
+  
+     
+  
+      // Mark appointment as cancelled
+      await appointmentModel.findOneAndUpdate({ _id: appointmentId }, { cancelled: true });
+  
+      // Releasing doctor slot
+      const { docId, slotDate, slotTime } = appointmentData;
+      const doctorData = await doctorModel.findById(docId);
+      if (!doctorData) {
+        return res.status(404).json({ success: false, message: "Doctor not found" });
+      }
+  
+      let slots_booked = doctorData.slots_booked;
+      if (slots_booked[slotDate]) {
+        slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+      }
+  
+      await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+  
+      res.json({ success: true, message: "Appointment cancelled" });
+  
+    } catch (error) {
+      console.error("Booking error:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+
+export {addDoctor, loginAdmin, allDoctors, appointmentAdmin, appointmentCancel}
